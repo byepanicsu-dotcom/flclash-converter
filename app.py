@@ -1,4 +1,4 @@
-from flask import Flask, Response, render_template_string
+from flask import Flask, Response, render_template, request
 import requests, base64, urllib.parse, yaml
 
 app = Flask(__name__)
@@ -8,33 +8,6 @@ SUBSCRIPTION_URLS = [
     "ТВОЯ_ПЕРВАЯ_ССЫЛКА_ЗДЕСЬ",
     "ТВОЯ_ВТОРАЯ_ССЫЛКА_ЗДЕСЬ" 
 ]
-
-HTML_TEMPLATE = """
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Умный Конвертер</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #ffffff; padding: 20px; display: flex; justify-content: center; }
-        .container { background: #1e1e1e; padding: 25px; border-radius: 12px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        h2 { color: #4CAF50; margin-top: 0; }
-        .result-box { margin-top: 20px; padding: 15px; background: #252525; border-left: 4px solid #4CAF50; border-radius: 6px; }
-        input { width: 100%; box-sizing: border-box; padding: 10px; margin-top: 10px; border-radius: 6px; border: 1px solid #333; background: #2d2d2d; color: #fff; font-size: 14px; text-align: center; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>FlClash API 🚀</h2>
-        <p>Конвертер успешно запущен в облаке!</p>
-        <div class="result-box">
-            <p>Вставь эту ссылку во FlClash (URL профиль):</p>
-            <input type="text" value="{{ host_url }}config.yaml" readonly onclick="this.select();">
-        </div>
-    </div>
-</body>
-</html>
-"""
 
 def fetch_sub(url):
     if "ТВОЯ_" in url: return []
@@ -83,10 +56,10 @@ def generate_clash_config(proxies):
         ]
     }
 
-from flask import request
 @app.route("/")
 def index():
-    return render_template_string(HTML_TEMPLATE, host_url=request.url_root)
+    # Передаем базовый URL сайта в шаблон для правильного формирования ссылки
+    return render_template("index.html", host_url=request.url_root)
 
 @app.route("/config.yaml")
 def get_config():
