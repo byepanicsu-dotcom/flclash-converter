@@ -3,20 +3,12 @@ import requests, base64, urllib.parse, yaml
 
 app = Flask(__name__)
 
-# --- ВСТАВЬ СВОИ ССЫЛКИ СЮДА ---
-SUBSCRIPTION_URLS = [
-    "ТВОЯ_ПЕРВАЯ_ССЫЛКА_ЗДЕСЬ",
-    "ТВОЯ_ВТОРАЯ_ССЫЛКА_ЗДЕСЬ" 
-]
-
 def fetch_sub(url):
-    if "ТВОЯ_" in url: return []
     try:
         req = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
         req.raise_for_status()
         raw = req.text.strip()
-        try:
-            return base64.b64decode(raw + "=" * (-len(raw) % 4)).decode("utf-8").splitlines()
+        try: return base64.b64decode(raw + "=" * (-len(raw) % 4)).decode("utf-8").splitlines()
         except: return raw.splitlines()
     except: return []
 
@@ -58,26 +50,21 @@ def generate_clash_config(proxies):
 
 @app.route("/")
 def index():
-    # Передаем базовый URL сайта в шаблон для правильного формирования ссылки
     return render_template("index.html", host_url=request.url_root)
 
 @app.route("/config.yaml")
 def get_config():
-    all_proxies = []
-    for url in SUBSCRIPTION_URLS:
-        lines = fetch_sub(url)
-        for l in lines:
-            if l.startswith("vless://"):
-                node = parse_vless(l)
-                if node: all_proxies.append(node)
+    sub_url = request.args.get("url")
+    if not sub_url: return "Error: Missing 'url' parameter", 400
+        
+    lines = fetch_sub(sub_url)
+    all_proxies = [p for p in (parse_vless(l.strip()) for l in lines if l.strip().startswith("vless://")) if p]
     
-    if not all_proxies:
-        return "Error: No valid servers found", 500
+    if not all_proxies: return "Error: No valid servers found", 500
         
     config = generate_clash_config(all_proxies)
-    yaml_data = yaml.dump(config, allow_unicode=True, sort_keys=False)
-    return Response(yaml_data, mimetype="text/yaml")
+    return Response(yaml.dump(config, allow_unicode=True, sort_keys=False), mimetype="text/yaml")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", po
-            rt=5000)
+    app.run(host="0.0.0.0", por
+            t=5000)
