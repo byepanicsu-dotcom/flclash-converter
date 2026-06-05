@@ -1,7 +1,77 @@
-from flask import Flask, Response, request
+from flask import Flask, Response, render_template_string, request
 import requests, base64, urllib.parse, yaml
 
 app = Flask(__name__)
+
+# Красивый интерфейс сайта
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlClash Конвертер</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #0b0f19; --card-bg: rgba(22, 28, 45, 0.6); --accent: #10b981; --accent-glow: rgba(16, 185, 129, 0.2); --text: #f3f4f6; --text-muted: #9ca3af; --border: rgba(255, 255, 255, 0.05); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: linear-gradient(135deg, #0b0f19 0%, #111827 100%); color: var(--text); margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .sphere { position: absolute; width: 300px; height: 300px; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%); top: 20%; left: 10%; z-index: 0; pointer-events: none; }
+        .sphere-2 { top: 60%; left: 60%; background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%); }
+        .container { background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--border); padding: 40px 30px; border-radius: 24px; width: 90%; max-width: 440px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); z-index: 1; }
+        .logo-area { font-size: 50px; margin-bottom: 10px; }
+        h2 { font-size: 26px; margin: 0 0 10px 0; color: #fff; }
+        p { color: var(--text-muted); font-size: 15px; margin: 0 0 25px 0; }
+        input[type="text"] { width: 100%; box-sizing: border-box; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: #fff; font-size: 15px; outline: none; margin-bottom: 15px; }
+        input[type="text"]:focus { border-color: var(--accent); }
+        .btn { background: var(--accent); color: #0b0f19; border: none; padding: 14px; width: 100%; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn:hover { transform: scale(1.02); box-shadow: 0 0 15px rgba(16,185,129,0.4); }
+        .result-box { display: none; background: rgba(0,0,0,0.3); border: 1px solid var(--border); padding: 20px; border-radius: 16px; margin-top: 20px; text-align: left; }
+        .result-title { font-size: 13px; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; font-weight: bold; }
+        .copy-group { display: flex; gap: 10px; }
+        .copy-group input { margin: 0; flex: 1; font-family: monospace; font-size: 13px; }
+        .copy-btn { background: #fff; color: #000; border: none; padding: 0 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="sphere"></div><div class="sphere sphere-2"></div>
+    <div class="container">
+        <div class="logo-area">⚡</div>
+        <h2>Умный Конвертер</h2>
+        <p>Вставьте ссылку от провайдера, чтобы получить готовый URL для FlClash</p>
+        
+        <input type="text" id="subUrl" placeholder="https://ваша-ссылка...">
+        <button class="btn" onclick="generate()">Сгенерировать ссылку</button>
+        
+        <div class="result-box" id="resultBox">
+            <div class="result-title">Готово! Добавьте это во FlClash:</div>
+            <div class="copy-group">
+                <input type="text" id="finalUrl" readonly>
+                <button class="copy-btn" onclick="copyIt()">Копировать</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generate() {
+            let input = document.getElementById('subUrl').value.trim();
+            if(!input) return alert('Пожалуйста, вставьте ссылку!');
+            // Формируем ту самую длинную ссылку автоматически
+            let baseUrl = window.location.origin + "/config.yaml?url=";
+            document.getElementById('finalUrl').value = baseUrl + encodeURIComponent(input);
+            document.getElementById('resultBox').style.display = 'block';
+        }
+        function copyIt() {
+            let el = document.getElementById('finalUrl');
+            el.select();
+            document.execCommand('copy');
+            let btn = document.querySelector('.copy-btn');
+            btn.innerText = 'Скопировано!';
+            setTimeout(() => btn.innerText = 'Копировать', 2000);
+        }
+    </script>
+</body>
+</html>
+"""
 
 def fetch_sub(url):
     try:
@@ -48,17 +118,15 @@ def generate_clash_config(proxies):
         ]
     }
 
-# Главная страница теперь просто выдает краткую инструкцию текстом
 @app.route("/")
 def index():
-    return "Использование: https://твой-сайт.onrender.com/config.yaml?url=ССЫЛКА_ОТ_ПРОВАЙДЕРА", 200
+    return render_template_string(HTML_TEMPLATE)
 
-# Этот роут обрабатывает ссылку для FlClash
 @app.route("/config.yaml")
 def get_config():
     sub_url = request.args.get("url")
     if not sub_url: 
-        return "Error: Missing 'url' parameter в ссылке", 400
+        return "Error: Missing 'url' parameter", 400
         
     lines = fetch_sub(sub_url)
     all_proxies = [p for p in (parse_vless(l.strip()) for l in lines if l.strip().startswith("vless://")) if p]
@@ -70,5 +138,5 @@ def get_config():
     return Response(yaml.dump(config, allow_unicode=True, sort_keys=False), mimetype="text/yaml")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port
-            =5000)
+    app.run(host="0.0.0.0", port=5000)
+    
