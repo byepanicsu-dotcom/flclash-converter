@@ -55,7 +55,6 @@ HTML_TEMPLATE = """
         function generate() {
             let input = document.getElementById('subUrl').value.trim();
             if(!input) return alert('Пожалуйста, вставьте ссылку!');
-            // Формируем ту самую длинную ссылку автоматически
             let baseUrl = window.location.origin + "/config.yaml?url=";
             document.getElementById('finalUrl').value = baseUrl + encodeURIComponent(input);
             document.getElementById('resultBox').style.display = 'block';
@@ -110,11 +109,59 @@ def generate_clash_config(proxies):
             {"name": "RUSSIA", "type": "select", "proxies": ["DIRECT"] + (ru_proxies if ru_proxies else [])}
         ],
         "rules": [
-            "SRC-IP-CIDR,192.168.0.0/16,DIRECT", "SRC-IP-CIDR,10.0.0.0/8,DIRECT",
-            "DOMAIN-SUFFIX,ru,RUSSIA", "DOMAIN-SUFFIX,su,RUSSIA", "DOMAIN-KEYWORD,gosuslugi,RUSSIA",
-            "DOMAIN-KEYWORD,sberbank,RUSSIA", "DOMAIN-KEYWORD,tinkoff,RUSSIA",
-            "DOMAIN-KEYWORD,youtube,PROXY", "DOMAIN-KEYWORD,instagram,PROXY", "DOMAIN-KEYWORD,telegram,PROXY",
-            "DOMAIN-KEYWORD,discord,PROXY", "DOMAIN-KEYWORD,openai,PROXY", "MATCH,DIRECT"
+            # Локальная сеть
+            "SRC-IP-CIDR,192.168.0.0/16,DIRECT",
+            "SRC-IP-CIDR,10.0.0.0/8,DIRECT",
+
+            # === РОССИЯ И ЛОКАЛЬНЫЕ СЕРВИСЫ (напрямую) ===
+            "DOMAIN-SUFFIX,ru,RUSSIA",
+            "DOMAIN-SUFFIX,su,RUSSIA",
+            "DOMAIN-SUFFIX,рф,RUSSIA",
+            "DOMAIN-KEYWORD,gosuslugi,RUSSIA",
+            "DOMAIN-KEYWORD,sberbank,RUSSIA",
+            "DOMAIN-KEYWORD,tinkoff,RUSSIA",
+            "DOMAIN-KEYWORD,yandex,RUSSIA",
+            "DOMAIN-SUFFIX,vk.com,RUSSIA",
+            "DOMAIN-SUFFIX,mail.ru,RUSSIA",
+            "DOMAIN-KEYWORD,playerok,RUSSIA",
+            "DOMAIN-KEYWORD,ggsel,RUSSIA",
+            "DOMAIN-KEYWORD,boosty,RUSSIA",
+
+            # === ИГРЫ (через VPN) ===
+            "DOMAIN-KEYWORD,roblox,PROXY",
+            "DOMAIN-KEYWORD,axlebolt,PROXY",
+            "DOMAIN-KEYWORD,standoff2,PROXY",
+            "DOMAIN-KEYWORD,supercell,PROXY",
+            "DOMAIN-KEYWORD,epicgames,PROXY",
+            "DOMAIN-KEYWORD,steampowered,PROXY",
+
+            # === СОЦСЕТИ И МЕДИА (через VPN) ===
+            "DOMAIN-KEYWORD,youtube,PROXY",
+            "DOMAIN-KEYWORD,googlevideo,PROXY",
+            "DOMAIN-KEYWORD,instagram,PROXY",
+            "DOMAIN-KEYWORD,telegram,PROXY",
+            "DOMAIN-KEYWORD,discord,PROXY",
+            "DOMAIN-KEYWORD,pinterest,PROXY",
+            "DOMAIN-KEYWORD,twitter,PROXY",
+            "DOMAIN-KEYWORD,twimg,PROXY",
+            "DOMAIN-KEYWORD,facebook,PROXY",
+            "DOMAIN-KEYWORD,spotify,PROXY",
+            "DOMAIN-KEYWORD,netflix,PROXY",
+
+            # === ИНСТРУМЕНТЫ, РАЗРАБОТКА И ИИ (через VPN) ===
+            "DOMAIN-KEYWORD,openai,PROXY",
+            "DOMAIN-KEYWORD,chatgpt,PROXY",
+            "DOMAIN-KEYWORD,anthropic,PROXY",
+            "DOMAIN-KEYWORD,claude,PROXY",
+            "DOMAIN-KEYWORD,gemini,PROXY",
+            "DOMAIN-KEYWORD,aistudio,PROXY",
+            "DOMAIN-KEYWORD,github,PROXY",
+            "DOMAIN-KEYWORD,supabase,PROXY",
+            "DOMAIN-KEYWORD,oracle,PROXY",
+            "DOMAIN-KEYWORD,vercel,PROXY",
+
+            # === ВСЁ ОСТАЛЬНОЕ (по умолчанию напрямую) ===
+            "MATCH,DIRECT"
         ]
     }
 
