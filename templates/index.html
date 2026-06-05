@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlClash Cloud Converter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="sphere"></div>
+    <div class="sphere sphere-2"></div>
+    <div class="container">
+        <div class="logo-area">⚡</div>
+        <h2>FlClash Конвертер</h2>
+        <p>Вставьте ссылку вашей подписки ниже, чтобы сгенерировать умный конфиг</p>
+        
+        <input type="text" id="providerUrl" placeholder="Вставьте ссылку провайдера (https://...)" oninput="generateLink()">
+        
+        <div class="result-box" id="resultBox" style="display: none;">
+            <div class="result-title">Готовая ссылка для FlClash</div>
+            <div class="input-group">
+                <input type="text" id="configUrl" readonly>
+                <button class="copy-btn" onclick="copyLink()">Копировать</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function generateLink() {
+            var providerUrl = document.getElementById("providerUrl").value.trim();
+            var resultBox = document.getElementById("resultBox");
+            var configUrl = document.getElementById("configUrl");
+            if(providerUrl.startsWith("http")) {
+                var baseUrl = "{{ host_url }}config.yaml?url=";
+                configUrl.value = baseUrl + encodeURIComponent(providerUrl);
+                resultBox.style.display = "block";
+            } else { resultBox.style.display = "none"; }
+        }
+        function copyLink() {
+            var copyText = document.getElementById("configUrl");
+            copyText.select();
+            navigator.clipboard.writeText(copyText.value);
+            var btn = document.querySelector(".copy-btn");
+            btn.innerHTML = "Скопировано!";
+            btn.style.background = "#ffffff";
+            btn.style.color = "#0b0f19";
+            setTimeout(function(){
+                btn.innerHTML = "Копировать";
+                btn.style.background = "var(--accent)";
+                btn.style.color = "#0b0f19";
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
